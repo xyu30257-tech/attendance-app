@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>学生出勤签到系统</title>
+    <style>
+        body { font-family: Arial, sans-serif; display: flex; justify-content: center; padding: 20px; background-color: #f4f4f9; }
+        .container { background: white; padding: 2rem; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); width: 100%; max-width: 400px; }
+        h2 { text-align: center; color: #333; }
+        input, select, button { width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box; }
+        button { background-color: #28a745; color: white; border: none; cursor: pointer; font-size: 16px; }
+        button:hover { background-color: #218838; }
+        #status { text-align: center; color: #666; margin-top: 10px; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>学生签到</h2>
+    <input type="text" id="studentName" placeholder="请输入学生姓名" required>
+    <select id="attendanceStatus">
+        <option value="出席">出席</option>
+        <option value="缺席">缺席</option>
+        <option value="迟到">迟到</option>
+    </select>
+    <button onclick="submitAttendance()">提交签到</button>
+    <div id="status"></div>
+</div>
+
+<!-- 引入 Firebase (使用 CDN) -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+  import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+  // --- 注意：请在此处替换为你自己的 Firebase 配置 ---
+  // 你需要在 Firebase Console 创建项目后获取这段代码
+  const firebaseConfig = {
+    apiKey: "你的_API_KEY",
+    authDomain: "你的_PROJECT_ID.firebaseapp.com",
+    projectId: "你的_PROJECT_ID",
+    storageBucket: "你的_PROJECT_ID.appspot.com",
+    messagingSenderId: "你的_SENDER_ID",
+    appId: "你的_APP_ID"
+  };
+
+  // 初始化 Firebase
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+
+  // 提交数据函数
+  window.submitAttendance = async function() {
+    const name = document.getElementById('studentName').value;
+    const status = document.getElementById('attendanceStatus').value;
+    const statusDiv = document.getElementById('status');
+
+    if (!name) {
+        alert("请输入姓名！");
+        return;
+    }
+
+    statusDiv.innerText = "提交中...";
+
+    try {
+      await addDoc(collection(db, "attendance"), {
+        studentName: name,
+        status: status,
+        timestamp: serverTimestamp()
+      });
+      statusDiv.innerText = "✅ 签到成功！";
+      document.getElementById('studentName').value = ""; // 清空输入框
+    } catch (e) {
+      console.error("错误: ", e);
+      statusDiv.innerText = "❌ 提交失败，请检查配置。";
+    }
+  }
+</script>
+
+</body>
+</html>
